@@ -1,11 +1,11 @@
 {
-    "ApplicationName": "CfnApplicationTestName",
-    "ApplicationDescription": "CfnApplicationTestDescriptionUpdated",
-    "RoleArn": "arn:aws:iam::{{ContractTestExecutionAccountId}}:role/service-role/AWSIotFleetHub_3",
-    "Tags": [
-        {
-            "Key": "testTagKey",
-            "Value": "testTagValue"
-        }
-    ]
+  "ApplicationName": "CfnApplicationTestName",
+  "ApplicationDescription": "CfnApplicationTestDescriptionUpdated",
+  "RoleArn": "arn:aws:iam::{{ContractTestExecutionAccountId}}:role/service-role/AWSIotFleetHub_3",
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "testTagValue"
+    }
+  ]
 }

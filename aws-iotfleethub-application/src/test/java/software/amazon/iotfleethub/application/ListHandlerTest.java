@@ -130,4 +130,3 @@ public class ListHandlerTest {
         assertThat(response.getResourceModels()).isEqualTo(expectedModelList);
     }
 }
-
