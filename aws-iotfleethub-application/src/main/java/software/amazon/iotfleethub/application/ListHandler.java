@@ -28,7 +28,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        ListApplicationsRequest listRequest = translateToListRequest(request);
+        ListApplicationsRequest listRequest = Translator.translateToListRequest(request);
 
         ListApplicationsResponse listResponse;
         try {
@@ -40,14 +40,15 @@ public class ListHandler extends BaseHandler<CallbackContext> {
 
         String nextToken = listResponse.nextToken();
 
+        // Date attributes need to be converted to int for CFN Model. Dates are in epoch seconds and within int range.
         List<ResourceModel> models = listResponse.applicationSummaries().stream()
                 .map(applicationSummary -> ResourceModel.builder()
                         .applicationId(applicationSummary.applicationId())
                         .applicationName(applicationSummary.applicationName())
                         .applicationDescription(applicationSummary.applicationDescription())
                         .applicationUrl(applicationSummary.applicationUrl())
-                        .applicationCreationDate((int)(long)applicationSummary.applicationCreationDate())
-                        .applicationLastUpdateDate((int)(long)applicationSummary.applicationLastUpdateDate())
+                        .applicationCreationDate(applicationSummary.applicationCreationDate().intValue())
+                        .applicationLastUpdateDate(applicationSummary.applicationLastUpdateDate().intValue())
                         .applicationState(applicationSummary.applicationStateAsString())
                         .build())
                 .collect(Collectors.toList());
@@ -58,12 +59,6 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                 .resourceModels(models)
                 .nextToken(nextToken)
                 .status(OperationStatus.SUCCESS)
-                .build();
-    }
-
-    private ListApplicationsRequest translateToListRequest(ResourceHandlerRequest<ResourceModel> request) {
-        return ListApplicationsRequest.builder()
-                .nextToken(request.getNextToken())
                 .build();
     }
 }

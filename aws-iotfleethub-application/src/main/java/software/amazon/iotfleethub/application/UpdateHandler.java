@@ -40,31 +40,28 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // Edge Case: We need to return a NotFound error if the ApplicationId is not provided
+        // We need to return a NotFound error if the ApplicationId is not provided
         if (model.getApplicationId() == null) {
             logger.log(String.format("ApplicationId was not provided."));
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.NotFound, "ApplicationId was not provided.");
         }
 
-        // ClientToken is required for idempotent Update Operation
         if (StringUtils.isEmpty(request.getClientRequestToken())) {
             logger.log(String.format("ClientToken is Required, but a client request token was not provided."));
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, "ClientToken was not provided.");
         }
 
-        // The following fields are Read-Only, so we don't want them being set in the returned model
-        // These checks do not affect the call to UpdateApp API itself, but we don't want incorrect info in the returned model
-        if (SetReadOnlyFields(model, logger, "ApplicationArn", model.getApplicationArn())
-                || SetReadOnlyFields(model, logger, "ApplicationUrl", model.getApplicationUrl())
-                || SetReadOnlyFields(model, logger, "ApplicationState", model.getApplicationState())
-                || SetReadOnlyFields(model, logger, "SsoClientId", model.getSsoClientId())
-                || SetReadOnlyFields(model, logger, "ErrorMessage", model.getErrorMessage())) {
+        if (Translator.isReadOnlyFieldSet(model, logger, "ApplicationArn", model.getApplicationArn())
+                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationUrl", model.getApplicationUrl())
+                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationState", model.getApplicationState())
+                || Translator.isReadOnlyFieldSet(model, logger, "SsoClientId", model.getSsoClientId())
+                || Translator.isReadOnlyFieldSet(model, logger, "ErrorMessage", model.getErrorMessage())) {
 
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest,
                     "Can only update ApplicationName, ApplicationDescription, or Tags.");
         }
 
-        UpdateApplicationRequest updateRequest = translateToUpdateRequest(request, model);
+        UpdateApplicationRequest updateRequest = Translator.translateToUpdateRequest(request, model);
 
         try {
             proxy.injectCredentialsAndInvokeV2(updateRequest, iotFleetHubClient::updateApplication);
@@ -75,7 +72,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             return ProgressEvent.failed(model, callbackContext, err, e.getMessage());
         }
 
-        // We need to get the applicationArn so that we can update tags
+        // Retrieving applicationArn to update tags
         DescribeApplicationRequest describeRequest = DescribeApplicationRequest.builder()
                 .applicationId(model.getApplicationId())
                 .build();
@@ -105,31 +102,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(request.getDesiredResourceState());
     }
 
-    private boolean SetReadOnlyFields(
-            ResourceModel model,
-            Logger logger,
-            String fieldType,
-            String fieldValue) {
-
-        if (!StringUtils.isEmpty(fieldValue)) {
-            logger.log(String.format("%s is Read-Only, but the caller passed %s.", fieldType, fieldValue));
-            return true;
-        }
-        return false;
-    }
-
-    private UpdateApplicationRequest translateToUpdateRequest(
-            ResourceHandlerRequest<ResourceModel> request,
-            ResourceModel model) {
-
-        return UpdateApplicationRequest.builder()
-                .applicationId(model.getApplicationId())
-                .applicationName(model.getApplicationName())
-                .applicationDescription(model.getApplicationDescription())
-                .clientToken(request.getClientRequestToken())
-                .build();
-    }
-
     void updateTags(AmazonWebServicesClientProxy proxy,
                     ResourceHandlerRequest<ResourceModel> request,
                     String applicationArn,
@@ -139,14 +111,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         Map<String, String> desiredTags = new HashMap<>();
         ResourceModel model = request.getDesiredResourceState();
         if (model.getTags() != null) {
-            // Including this because some tag errors occurring when testing while just using DesiredResourceTags below
             for (Tag t : model.getTags()) {
                 desiredTags.put(t.getKey(), t.getValue());
             }
         }
         if (request.getDesiredResourceTags() != null) {
-            // DesiredResourceTags includes both model and stack-level tags.
-            // Reference: https://tinyurl.com/yyxtd7w6
             desiredTags.putAll(request.getDesiredResourceTags());
         }
 

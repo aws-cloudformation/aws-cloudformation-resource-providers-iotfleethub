@@ -36,13 +36,13 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // Edge Case: ReadHandler must return NotFound error if the ApplicationId is not provided
+        // ReadHandler must return NotFound error if the ApplicationId is not provided
         if (model.getApplicationId() == null) {
             logger.log(String.format("ApplicationId was not provided."));
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.NotFound, "ApplicationId was not provided.");
         }
 
-        DescribeApplicationRequest describeRequest = translateToDescribeRequest(model);
+        DescribeApplicationRequest describeRequest = Translator.translateToDescribeRequest(model);
 
         DescribeApplicationResponse describeResponse;
         try {
@@ -59,18 +59,15 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         String applicationName = describeResponse.applicationName();
         logger.log(String.format("Described Application %s, named %s.", applicationId, applicationName));
 
-        // We need to convert our map of strings to a set of Tags for CFN
         Map<String, String> tagMap = describeResponse.tags();
         Set<Tag> tagSet = new HashSet<Tag>();
 
-        if (tagMap != null) {
-            for (Map.Entry<String,String> tagEntry : tagMap.entrySet()) {
-                Tag tag = Tag.builder()
-                        .key(tagEntry.getKey())
-                        .value(tagEntry.getValue())
-                        .build();
-                tagSet.add(tag);
-            }
+        for (Map.Entry<String,String> tagEntry : tagMap.entrySet()) {
+            Tag tag = Tag.builder()
+                    .key(tagEntry.getKey())
+                    .value(tagEntry.getValue())
+                    .build();
+            tagSet.add(tag);
         }
 
         return ProgressEvent.defaultSuccessHandler(
@@ -81,18 +78,12 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                         .applicationDescription(describeResponse.applicationDescription())
                         .applicationUrl(describeResponse.applicationUrl())
                         .applicationState(describeResponse.applicationStateAsString())
-                        .applicationCreationDate((int)(long)describeResponse.applicationCreationDate())
-                        .applicationLastUpdateDate((int)(long)describeResponse.applicationLastUpdateDate())
+                        .applicationCreationDate(describeResponse.applicationCreationDate().intValue())
+                        .applicationLastUpdateDate(describeResponse.applicationLastUpdateDate().intValue())
                         .roleArn(describeResponse.roleArn())
                         .ssoClientId(describeResponse.ssoClientId())
                         .errorMessage(describeResponse.errorMessage())
                         .tags(tagSet)
                         .build());
-    }
-
-    private DescribeApplicationRequest translateToDescribeRequest(ResourceModel model) {
-        return DescribeApplicationRequest.builder()
-                .applicationId(model.getApplicationId())
-                .build();
     }
 }

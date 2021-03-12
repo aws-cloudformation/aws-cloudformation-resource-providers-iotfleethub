@@ -19,7 +19,7 @@ public class TestConstants {
     protected static final String APPLICATION_STATE = "ACTIVE";
     protected static final long APPLICATION_CREATION_DATE = 1605054959;
     protected static final long APPLICATION_LAST_UPDATE_DATE = 1605054959;
-    protected static final String CLIENT_TOKEN = "Fl33tHuB";
+    protected static final String CLIENT_TOKEN = "87e64213-f61a-4e99-2b22-c633b4512917";
     protected static final String ERROR_MESSAGE = "There was an error.";
     protected static final String ROLE_ARN = "arn:aws:iam::123456789012:role/service-role/AWSIotFleetHub_3";
     protected static final String SSO_CLIENT_ID = "LHGUNDyWARfdHlWpWgMuLmJ5hp58xwbqCc";

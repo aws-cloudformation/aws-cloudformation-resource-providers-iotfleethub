@@ -88,21 +88,18 @@ public class CreateHandlerTest {
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
         ResourceModel expectedModel = ResourceModel.builder()
                 .applicationName(APPLICATION_NAME)
                 .applicationId(APPLICATION_ID)
                 .applicationArn(APPLICATION_ARN)
                 .roleArn(ROLE_ARN)
                 .build();
-        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
     }
 
     @Test
@@ -129,14 +126,6 @@ public class CreateHandlerTest {
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
         ResourceModel expectedModel = ResourceModel.builder()
                 .applicationName(APPLICATION_NAME)
                 .applicationDescription(APPLICATION_DESCRIPTION)
@@ -145,7 +134,12 @@ public class CreateHandlerTest {
                 .roleArn(ROLE_ARN)
                 .tags(MODEL_TAGS)
                 .build();
-        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
 
         // Examining the actual request used in CreateApplication call
         ArgumentCaptor<CreateApplicationRequest> requestCaptor = ArgumentCaptor.forClass(CreateApplicationRequest.class);
@@ -175,10 +169,8 @@ public class CreateHandlerTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
         assertThat(response.getMessage()).isNotNull();
-        assertEquals(response.getErrorCode(), HandlerErrorCode.InvalidRequest);
     }
 
     @Test
@@ -200,8 +192,29 @@ public class CreateHandlerTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(response.getMessage()).isNull();
+    }
+
+    @Test
+    public void handleRequest_NoClientRequestToken_Failure() {
+        ResourceModel model = ResourceModel.builder()
+                .applicationName(APPLICATION_NAME)
+                .applicationArn(APPLICATION_ARN)
+                .applicationId(APPLICATION_ID)
+                .roleArn(ROLE_ARN)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .clientRequestToken(null)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(response.getMessage()).isEqualTo("ClientToken was not provided.");
     }
 }

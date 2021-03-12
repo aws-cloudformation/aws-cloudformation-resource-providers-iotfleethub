@@ -88,7 +88,7 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_CompleteUpdate_Success() {
+    public void handleRequest_Simple_Success() {
         ResourceModel previousModel = ResourceModel.builder()
                 .applicationId(APPLICATION_ID)
                 .applicationName(APPLICATION_NAME)
@@ -106,6 +106,7 @@ public class UpdateHandlerTest {
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
+                .desiredResourceTags(MODEL_TAG_MAP)
                 .clientRequestToken(CLIENT_TOKEN)
                 .build();
 
@@ -136,16 +137,12 @@ public class UpdateHandlerTest {
         // Handle Update Request
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
-        assertThat(response.getResourceModel()).isEqualTo(desiredModel);
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(desiredModel)
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
 
         ArgumentCaptor<IoTFleetHubRequest> requestCaptor = ArgumentCaptor.forClass(IoTFleetHubRequest.class);
         // IoTFleetHubClient made 4 calls in this case:
@@ -218,12 +215,35 @@ public class UpdateHandlerTest {
                 .build();
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(response.getMessage()).isEqualTo("Can only update ApplicationName, ApplicationDescription, or Tags.");
     }
 
     @Test
-    public void handleRequest_AppDoesNotExist_Failure() {
+    public void handleRequest_NoAppId_Failure() {
+        ResourceModel desiredModel = ResourceModel.builder()
+                .applicationName(APPLICATION_NAME_2)
+                .applicationDescription(APPLICATION_DESCRIPTION_2)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(desiredModel)
+                .clientRequestToken(CLIENT_TOKEN)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).isEqualTo("ApplicationId was not provided.");
+    }
+
+    @Test
+    public void handleRequest_AppNotFound_Failure() {
         ResourceModel desiredModel = ResourceModel.builder()
                 .applicationId(APPLICATION_ID)
                 .applicationName(APPLICATION_NAME_2)
@@ -235,18 +255,35 @@ public class UpdateHandlerTest {
                 .clientRequestToken(CLIENT_TOKEN)
                 .build();
 
-        UpdateApplicationRequest expectedUpdateRequest = UpdateApplicationRequest.builder()
-                .applicationId(APPLICATION_ID)
-                .applicationName(APPLICATION_NAME_2)
-                .applicationDescription(APPLICATION_DESCRIPTION_2)
-                .clientToken(CLIENT_TOKEN)
-                .build();
-
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).isNull();
+    }
+
+    @Test
+    public void handleRequest_NoClientRequestToken_Failure() {
+        ResourceModel model = ResourceModel.builder()
+                .applicationId(APPLICATION_ID)
+                .applicationName(APPLICATION_NAME_2)
+                .applicationDescription(APPLICATION_DESCRIPTION_2)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .clientRequestToken(null)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThat(response.getMessage()).isEqualTo("ClientToken was not provided.");
     }
 }

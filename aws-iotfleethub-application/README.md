@@ -1,9 +1,10 @@
 # AWS::IoTFleetHub::Application
 
-Congratulations on starting development! Next steps:
+Schema, Handlers, and Tests for the AWS::IoTFleetHub::Application CloudFormation resource type.
 
-1. Write the JSON schema describing your resource, `aws-iotfleethub-application.json`
-1. Implement your resource handlers.
+See [documentation](https://docs.aws.amazon.com/iot/latest/apireference/API_Operations_AWS_IoT_Fleet_Hub.html) on underlying IoT Fleet Hub APIs for more info.
+
+---
 
 The RPDK will automatically generate the correct resource model from the schema whenever the project is built via Maven. You can also do this manually with the following command: `cfn generate`.
 

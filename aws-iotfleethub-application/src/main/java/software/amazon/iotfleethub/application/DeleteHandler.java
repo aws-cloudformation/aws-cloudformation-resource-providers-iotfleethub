@@ -35,22 +35,12 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // ClientToken is required for idempotent Delete Operation
         if (StringUtils.isEmpty(request.getClientRequestToken())) {
             logger.log(String.format("ClientToken is Required, but a client request token was not provided."));
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, "ClientToken was not provided.");
         }
 
-        // From https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
-        // "A delete handler MUST return FAILED with a NotFound error code if the
-        // resource did not exist prior to the delete request."
-        // DeleteApplication API is idempotent, so we have to call Describe first.
-
-        // Before we call Describe, we also need to deal with an InvalidRequest edge case.
-        // If CFN is trying to delete a resource with an invalid name, returning InvalidRequest would
-        // get CFN stuck in delete-failed state. If we return NotFound, it'll just succeed.
-        // We wouldn't have to do this if aws-cloudformation-rpdk-java-plugin had functioning regex
-        // pattern evaluation (known issue with an internal ticket).
+        // If application id regex is null or invalid, return NotFound to avoid stuck Delete-Failed state in CFN after invalid request
         String applicationId = model.getApplicationId();
         if (applicationId == null) {
             logger.log("Returning NotFound from DeleteHandler due to no Id provided in the model.");
@@ -63,22 +53,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             }
         }
 
-        DescribeApplicationRequest describeRequest = DescribeApplicationRequest.builder()
-                .applicationId(applicationId)
-                .build();
-        try {
-            proxy.injectCredentialsAndInvokeV2(describeRequest, iotFleetHubClient::describeApplication);
-        } catch (RuntimeException e) {
-            // If the resource doesn't exist, DescribeCustomMetric will throw ResourceNotFoundException,
-            // and we'll return FAILED with HandlerErrorCode.NotFound.
-            // CFN (the caller) will swallow the "failure" and the customer will see success.
-            HandlerErrorCode err = Translator.translateExceptionToErrorCode(e, logger);
-            return ProgressEvent.failed(model, callbackContext, err, e.getMessage());
-        }
-        logger.log(String.format("Called Describe for application %s, accountId %s.",
-                applicationId, request.getAwsAccountId()));
-
-        DeleteApplicationRequest deleteRequest = translateToDeleteRequest(request, model);
+        DeleteApplicationRequest deleteRequest = Translator.translateToDeleteRequest(request, model);
 
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotFleetHubClient::deleteApplication);
@@ -94,15 +69,5 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 model.getApplicationId(), request.getAwsAccountId()));
 
         return ProgressEvent.defaultSuccessHandler(null);
-    }
-
-    private DeleteApplicationRequest translateToDeleteRequest(
-            ResourceHandlerRequest<ResourceModel> request,
-            ResourceModel model) {
-
-        return DeleteApplicationRequest.builder()
-                .applicationId(model.getApplicationId())
-                .clientToken(request.getClientRequestToken())
-                .build();
     }
 }

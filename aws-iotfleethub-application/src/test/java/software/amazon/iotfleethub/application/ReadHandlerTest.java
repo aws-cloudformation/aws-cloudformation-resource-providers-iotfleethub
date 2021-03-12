@@ -2,6 +2,7 @@ package software.amazon.iotfleethub.application;
 
 import software.amazon.awssdk.services.iotfleethub.model.DescribeApplicationRequest;
 import software.amazon.awssdk.services.iotfleethub.model.DescribeApplicationResponse;
+import software.amazon.awssdk.services.iotfleethub.model.InvalidRequestException;
 import software.amazon.awssdk.services.iotfleethub.model.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -36,6 +37,7 @@ import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_STATE;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_URL;
 import static software.amazon.iotfleethub.application.TestConstants.ERROR_MESSAGE;
+import static software.amazon.iotfleethub.application.TestConstants.INVALID_APPLICATION_ID;
 import static software.amazon.iotfleethub.application.TestConstants.MODEL_TAG_MAP;
 import static software.amazon.iotfleethub.application.TestConstants.MODEL_TAGS;
 import static software.amazon.iotfleethub.application.TestConstants.ROLE_ARN;
@@ -96,15 +98,7 @@ public class ReadHandlerTest {
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
-        // Main purpose of this is to verify the response tags are in Set<Tag> format, not Map<String, String>
-        // Cannot only check tags directly, as it has private access in ResourceModel
+        // Verify response tags are in Set<Tag> format, not Map<String, String>
         ResourceModel expectedModel = ResourceModel.builder()
                 .applicationId(APPLICATION_ID)
                 .applicationArn(APPLICATION_ARN)
@@ -112,14 +106,19 @@ public class ReadHandlerTest {
                 .applicationDescription(APPLICATION_DESCRIPTION)
                 .applicationUrl(APPLICATION_URL)
                 .applicationState(APPLICATION_STATE)
-                .applicationCreationDate((int)(long)APPLICATION_CREATION_DATE)
-                .applicationLastUpdateDate((int)(long)APPLICATION_LAST_UPDATE_DATE)
+                .applicationCreationDate((int)APPLICATION_CREATION_DATE)
+                .applicationLastUpdateDate((int)APPLICATION_LAST_UPDATE_DATE)
                 .roleArn(ROLE_ARN)
                 .ssoClientId(SSO_CLIENT_ID)
                 .errorMessage(ERROR_MESSAGE)
                 .tags(MODEL_TAGS)
                 .build();
-        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
     }
 
     @Test
@@ -134,8 +133,8 @@ public class ReadHandlerTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getMessage()).isNotNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).isEqualTo("ApplicationId was not provided.");
     }
 
     @Test
@@ -153,6 +152,9 @@ public class ReadHandlerTest {
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getMessage()).isNull();
     }
 }

@@ -61,7 +61,7 @@ public class ListHandlerTest {
     }
 
     @Test
-    public void handleRequest_SimpleSuccess() {
+    public void handleRequest_Simple_Success() {
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .nextToken("nextToken1")
                 .build();
@@ -98,15 +98,6 @@ public class ListHandlerTest {
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isNull();
-        assertThat(response.getResourceModels()).isNotNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
         assertThat(response.getNextToken()).isEqualTo("nextToken2");
         List<ResourceModel> expectedModelList = Arrays.asList(
                 ResourceModel.builder()
@@ -114,8 +105,8 @@ public class ListHandlerTest {
                         .applicationName(APPLICATION_NAME)
                         .applicationDescription(APPLICATION_DESCRIPTION)
                         .applicationUrl(APPLICATION_URL)
-                        .applicationCreationDate((int)(long)APPLICATION_CREATION_DATE)
-                        .applicationLastUpdateDate((int)(long)APPLICATION_LAST_UPDATE_DATE)
+                        .applicationCreationDate((int)APPLICATION_CREATION_DATE)
+                        .applicationLastUpdateDate((int)APPLICATION_LAST_UPDATE_DATE)
                         .applicationState(APPLICATION_STATE)
                         .build(),
                 ResourceModel.builder()
@@ -123,10 +114,65 @@ public class ListHandlerTest {
                         .applicationName(APPLICATION_NAME_2)
                         .applicationDescription(APPLICATION_DESCRIPTION)
                         .applicationUrl(APPLICATION_URL_2)
-                        .applicationCreationDate((int)(long)APPLICATION_CREATION_DATE)
-                        .applicationLastUpdateDate((int)(long)APPLICATION_LAST_UPDATE_DATE)
+                        .applicationCreationDate((int)APPLICATION_CREATION_DATE)
+                        .applicationLastUpdateDate((int)APPLICATION_LAST_UPDATE_DATE)
                         .applicationState(APPLICATION_STATE)
                         .build());
-        assertThat(response.getResourceModels()).isEqualTo(expectedModelList);
+
+        // ListHandler uses getResourceModels attribute, all other handlers use getResouceModel
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModels(expectedModelList)
+                .nextToken("nextToken2")
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
+    }
+
+    @Test
+    public void handleRequest_NextTokenNull_Success() {
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .nextToken(null)
+                .build();
+
+        List<ApplicationSummary> applicationSummaries = new ArrayList<ApplicationSummary>(1);
+        ApplicationSummary SimpleApp = ApplicationSummary.builder()
+                .applicationId(APPLICATION_ID)
+                .applicationName(APPLICATION_NAME)
+                .applicationDescription(APPLICATION_DESCRIPTION)
+                .applicationUrl(APPLICATION_URL)
+                .applicationCreationDate(APPLICATION_CREATION_DATE)
+                .applicationLastUpdateDate(APPLICATION_LAST_UPDATE_DATE)
+                .applicationState(APPLICATION_STATE)
+                .build();
+        applicationSummaries.add(SimpleApp);
+
+        ListApplicationsResponse listResponse = ListApplicationsResponse.builder()
+                .applicationSummaries(applicationSummaries)
+                .nextToken(null)
+                .build();
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
+                .thenReturn(listResponse);
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response.getNextToken()).isEqualTo(null);
+        List<ResourceModel> expectedModelList = Arrays.asList(
+                ResourceModel.builder()
+                        .applicationId(APPLICATION_ID)
+                        .applicationName(APPLICATION_NAME)
+                        .applicationDescription(APPLICATION_DESCRIPTION)
+                        .applicationUrl(APPLICATION_URL)
+                        .applicationCreationDate((int)APPLICATION_CREATION_DATE)
+                        .applicationLastUpdateDate((int)APPLICATION_LAST_UPDATE_DATE)
+                        .applicationState(APPLICATION_STATE)
+                        .build());
+        ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModels(expectedModelList)
+                .nextToken(null)
+                .status(OperationStatus.SUCCESS)
+                .callbackDelaySeconds(0)
+                .build();
+        assertThat(response).isEqualTo(expectedResponse);
     }
 }

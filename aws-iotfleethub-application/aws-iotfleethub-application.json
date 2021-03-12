@@ -141,8 +141,7 @@
     },
     "read": {
       "permissions": [
-        "iotfleethub:DescribeApplication",
-        "iotfleethub:ListTagsForResource"
+        "iotfleethub:DescribeApplication"
       ]
     },
     "update": {
@@ -150,8 +149,7 @@
         "iotfleethub:UpdateApplication",
         "iotfleethub:DescribeApplication",
         "iotfleethub:TagResource",
-        "iotfleethub:UntagResource",
-        "iam:PassRole"
+        "iotfleethub:UntagResource"
       ]
     },
     "delete": {
