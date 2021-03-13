@@ -62,12 +62,14 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         Map<String, String> tagMap = describeResponse.tags();
         Set<Tag> tagSet = new HashSet<Tag>();
 
-        for (Map.Entry<String,String> tagEntry : tagMap.entrySet()) {
-            Tag tag = Tag.builder()
-                    .key(tagEntry.getKey())
-                    .value(tagEntry.getValue())
-                    .build();
-            tagSet.add(tag);
+        if (tagMap != null) {
+            for (Map.Entry<String,String> tagEntry : tagMap.entrySet()) {
+                Tag tag = Tag.builder()
+                        .key(tagEntry.getKey())
+                        .value(tagEntry.getValue())
+                        .build();
+                tagSet.add(tag);
+            }
         }
 
         return ProgressEvent.defaultSuccessHandler(

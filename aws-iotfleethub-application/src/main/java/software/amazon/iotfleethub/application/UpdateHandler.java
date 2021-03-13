@@ -40,7 +40,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // We need to return a NotFound error if the ApplicationId is not provided
+        // UpdateHandler must return a NotFound error if the ApplicationId is not provided
         if (model.getApplicationId() == null) {
             logger.log(String.format("ApplicationId was not provided."));
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.NotFound, "ApplicationId was not provided.");

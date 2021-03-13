@@ -38,10 +38,6 @@ public class TestConstants {
                     .build());
     protected static final Map<String, String> MODEL_TAG_MAP_2 = ImmutableMap.of("resourceTagKey2", "resourceTagValue2");
 
-    protected static final String INVALID_APPLICATION_NAME =
-            "AWS CloudFormation gives you an easy way to model a collection of " +
-                    "related AWS and third-party resources, provision them quickly and consistently, and manage them throughout their lifecycles, " +
-                    "by treating infrastructure as code. A CloudFormation template describes your desired resources and their dependencies so " +
-                    "you can launch and configure them together as a stack";
+    protected static final String INVALID_APPLICATION_NAME = new String(new char[300]).replace('\0', '1');
     protected static final String INVALID_APPLICATION_ID = "1234-invalid-5678";
 }
