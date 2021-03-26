@@ -73,7 +73,7 @@
       "type": "integer"
     },
     "RoleArn": {
-      "description": "The ARN of the role that the web application assumes when it interacts with AWS IoT Core. Note that the name of the role must be in the form AWSIotFleetHub_random_string",
+      "description": "The ARN of the role that the web application assumes when it interacts with AWS IoT Core. For more info on configuring this attribute, see https://docs.aws.amazon.com/iot/latest/apireference/API_iotfleethub_CreateApplication.html#API_iotfleethub_CreateApplication_RequestSyntax",
       "type": "string",
       "pattern": "^arn:[!-~]+$",
       "minLength": 1,
