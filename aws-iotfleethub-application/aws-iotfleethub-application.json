@@ -38,37 +38,31 @@
     "ApplicationArn": {
       "description": "The ARN of the application.",
       "type": "string",
-      "pattern": ".*",
+      "pattern": "^arn:[!-~]+$",
       "minLength": 1,
       "maxLength": 1600
     },
     "ApplicationName": {
       "description": "Application Name, should be between 1 and 256 characters.",
       "type": "string",
-      "pattern": "[^\\u0000-\\u001F\\u007F]+",
+      "pattern": "^[ -~]*$",
       "minLength": 1,
       "maxLength": 256
     },
     "ApplicationDescription": {
       "description": "Application Description, should be between 1 and 2048 characters.",
       "type": "string",
-      "pattern": "[^\\\\u0000-\\\\u001F\\\\u007F]+",
+      "pattern": "^[ -~]*$",
       "minLength": 1,
       "maxLength": 2048
     },
     "ApplicationUrl": {
       "description": "The URL of the application.",
-      "type": "string",
-      "pattern": "^(http|https)\\://\\S+",
-      "minLength": 1,
-      "maxLength": 256
+      "type": "string"
     },
     "ApplicationState": {
       "description": "The current state of the application.",
-      "type": "string",
-      "pattern": "[^\\u0000-\\u001F\\u007F]+",
-      "minLength": 1,
-      "maxLength": 256
+      "type": "string"
     },
     "ApplicationCreationDate": {
       "description": "When the Application was created",
@@ -79,25 +73,19 @@
       "type": "integer"
     },
     "RoleArn": {
-      "description": "The ARN of the role that the web application assumes when it interacts with AWS IoT Core.",
+      "description": "The ARN of the role that the web application assumes when it interacts with AWS IoT Core. Note that the name of the role must be in the form AWSIotFleetHub_random_string",
       "type": "string",
-      "pattern": ".*:iam::[0-9]{12}:role/service-role/AWSIotFleetHub_.*",
+      "pattern": "^arn:[!-~]+$",
       "minLength": 1,
       "maxLength": 1600
     },
     "SsoClientId": {
       "description": "The AWS SSO application generated client ID (used with AWS SSO APIs).",
-      "type": "string",
-      "pattern": "^[!-~]*",
-      "minLength": 1,
-      "maxLength": 256
+      "type": "string"
     },
     "ErrorMessage": {
       "description": "A message indicating why Create or Delete Application failed.",
-      "type": "string",
-      "pattern": "[^\\u0000-\\u001F\\u007F]+",
-      "minLength": 1,
-      "maxLength": 256
+      "type": "string"
     },
     "Tags": {
       "description": "A list of key-value pairs that contain metadata for the application.",
