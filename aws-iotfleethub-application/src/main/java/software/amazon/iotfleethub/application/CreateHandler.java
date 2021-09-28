@@ -42,12 +42,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, "ClientToken was not provided.");
         }
 
-        if (Translator.isReadOnlyFieldSet(model, logger, "ApplicationArn", model.getApplicationArn())
-                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationId", model.getApplicationId())
-                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationUrl", model.getApplicationUrl())
-                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationState", model.getApplicationState())
-                || Translator.isReadOnlyFieldSet(model, logger, "SsoClientId", model.getSsoClientId())
-                || Translator.isReadOnlyFieldSet(model, logger, "ErrorMessage", model.getErrorMessage())) {
+        if (Translator.isReadOnlyFieldSet(logger, "ApplicationArn", model.getApplicationArn())
+                || Translator.isReadOnlyFieldSet(logger, "ApplicationId", model.getApplicationId())
+                || Translator.isReadOnlyFieldSet(logger, "ApplicationUrl", model.getApplicationUrl())
+                || Translator.isReadOnlyFieldSet(logger, "ApplicationState", model.getApplicationState())
+                || Translator.isReadOnlyFieldSet(logger, "SsoClientId", model.getSsoClientId())
+                || Translator.isReadOnlyFieldSet(logger, "ErrorMessage", model.getErrorMessage())) {
 
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest,
                     "Can only set ApplicationName, RoleArn, ApplicationDescription (optional), and Tags (optional) in CreateApplication call.");

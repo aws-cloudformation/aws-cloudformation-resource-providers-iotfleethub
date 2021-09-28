@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
@@ -38,6 +39,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
+        ResourceModel prevModel = request.getPreviousResourceState();
         ResourceModel model = request.getDesiredResourceState();
 
         // UpdateHandler must return a NotFound error if the ApplicationId is not provided
@@ -51,12 +53,13 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, "ClientToken was not provided.");
         }
 
-        if (Translator.isReadOnlyFieldSet(model, logger, "ApplicationArn", model.getApplicationArn())
-                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationUrl", model.getApplicationUrl())
-                || Translator.isReadOnlyFieldSet(model, logger, "ApplicationState", model.getApplicationState())
-                || Translator.isReadOnlyFieldSet(model, logger, "SsoClientId", model.getSsoClientId())
-                || Translator.isReadOnlyFieldSet(model, logger, "ErrorMessage", model.getErrorMessage())) {
-
+        if (Objects.isNull(prevModel)) {
+            logger.log(String.format("Previous Resource State not found."));
+        } else if (Translator.isReadOnlyFieldChanged(logger, "ApplicationArn", prevModel.getApplicationArn(), model.getApplicationArn())
+                || Translator.isReadOnlyFieldChanged(logger, "ApplicationUrl", prevModel.getApplicationUrl(), model.getApplicationUrl())
+                || Translator.isReadOnlyFieldChanged(logger, "ApplicationState", prevModel.getApplicationState(), model.getApplicationState())
+                || Translator.isReadOnlyFieldChanged(logger, "SsoClientId", prevModel.getSsoClientId(), model.getSsoClientId())
+                || Translator.isReadOnlyFieldChanged(logger, "ErrorMessage", prevModel.getErrorMessage(), model.getErrorMessage())) {
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest,
                     "Can only update ApplicationName, ApplicationDescription, or Tags.");
         }
