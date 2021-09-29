@@ -49,6 +49,7 @@ import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_DESCRIPTION;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_DESCRIPTION_2;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_ID;
+import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_ID_2;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_LAST_UPDATE_DATE;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_NAME;
 import static software.amazon.iotfleethub.application.TestConstants.APPLICATION_NAME_2;
@@ -202,14 +203,21 @@ public class UpdateHandlerTest {
 
     @Test
     public void handleRequest_SettingReadOnlyFields_Failure() {
-        ResourceModel desiredModel = ResourceModel.builder()
+        ResourceModel previousModel = ResourceModel.builder()
                 .applicationId(APPLICATION_ID)
+                .applicationName(APPLICATION_NAME)
+                .applicationDescription(APPLICATION_DESCRIPTION)
+                .build();
+
+        ResourceModel desiredModel = ResourceModel.builder()
+                .applicationId(APPLICATION_ID_2)
                 .applicationArn(APPLICATION_ARN)
-                .applicationName(APPLICATION_NAME_2)
-                .applicationDescription(APPLICATION_DESCRIPTION_2)
+                .applicationName(APPLICATION_NAME)
+                .applicationDescription(APPLICATION_DESCRIPTION)
                 .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
                 .clientRequestToken(CLIENT_TOKEN)
                 .build();

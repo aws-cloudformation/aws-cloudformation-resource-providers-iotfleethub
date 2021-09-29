@@ -122,13 +122,25 @@ public class Translator {
   }
 
   static boolean isReadOnlyFieldSet(
-          ResourceModel model,
           Logger logger,
           String fieldType,
           String fieldValue) {
 
     if (!StringUtils.isEmpty(fieldValue)) {
       logger.log(String.format("%s is Read-Only, but the caller passed %s.", fieldType, fieldValue));
+      return true;
+    }
+    return false;
+  }
+
+  static boolean isReadOnlyFieldChanged(
+          Logger logger,
+          String fieldType,
+          String previousFieldValue,
+          String currentFieldValue) {
+
+    if (!StringUtils.equals(previousFieldValue, currentFieldValue)) {
+      logger.log(String.format("%s is Read-Only, but the caller attempted to modify %s to %s", fieldType, previousFieldValue, currentFieldValue));
       return true;
     }
     return false;

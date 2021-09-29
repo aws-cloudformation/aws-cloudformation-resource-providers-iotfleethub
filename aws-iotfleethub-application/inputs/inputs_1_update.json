@@ -4,8 +4,8 @@
   "RoleArn": "arn:aws:iam::{{ContractTestExecutionAccountId}}:role/AWSIotFleetHub_3",
   "Tags": [
     {
-      "Key": "testTagKey",
-      "Value": "testTagValue"
+      "Key": "testTagKeyUpdated",
+      "Value": "testTagValueUpdated"
     }
   ]
 }
